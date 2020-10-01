@@ -1,0 +1,219 @@
+﻿@model BEEERP.Models.AITS_Models.AITS_EmployeeDesignation
+
+@{
+    ViewBag.Title = "Designation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm("SaveEmployeeDesignation", "EmployeeDesignation", FormMethod.Post))
+{
+    <div class="content">
+        <div class="row">
+            <div class="form-horizontal">
+                <div class="box-body">
+                    <div>
+                        <h4 style="color:red">@ViewBag.messege</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="box ">
+                                <div class="box-header with-border box-head-back">
+                                    <h3 class="box-title">Create Designation</h3>
+                                </div>
+                                <div class="box-body">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.ID, new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.TextBoxFor(m => m.ID, new { @class = "form-control", @readonly = "readonly", @Value = ViewBag.ID })
+                                            @Html.ValidationMessageFor(m => m.ID)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.EmpID,"Employee name", new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.EmpID, (IEnumerable<SelectListItem>)ViewBag.employees, new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(m => m.EmpID)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.DesignationID,"Designation", new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.DesignationID, (IEnumerable<SelectListItem>)ViewBag.Designation, new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(m => m.DesignationID)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.FirstCode,"First Code", new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.FirstCode, (IEnumerable<SelectListItem>)ViewBag.FirstCode, new { @class = "form-control select2"})
+                                            @Html.ValidationMessageFor(m => m.FirstCode)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.SecondCode,"Second Code", new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.SecondCode, (IEnumerable<SelectListItem>)ViewBag.SecondCode, new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(m => m.SecondCode)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-4"></div>
+                                        <div class="col-sm-8">
+                                            <input type="submit" name="Save" id="save" value="Save" class="btn skin-blue" />
+                                            <input type="submit" name="Upate" id="update" value="Update" class="btn skin-blue" />
+                                            <input type="submit" name="delete" id="delete" value="Delete" class="btn skin-blue" />
+                                            <input type="button" name="Refresh" id="refresh" value="Refresh" class="btn skin-blue" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="box ">
+                                <div class="box-header with-border box-head-back">
+                                    <h3 class="box-title">Designation List</h3>
+                                </div>
+                                <div class="box-body">
+                                    <table class="table table-responsive" id="EmployeeDesignationList">
+                                        <thead>
+                                            <tr>
+                                                <th>Employee Name</th>
+                                                <th>Employee Designation</th>
+                                                <th>First Code</th>
+                                                <th>Second Code</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in ViewBag.EmployeeDesignation)
+                                            {
+                                                <tr value="@item.ID" class="clickable-row">
+                                                    <td>@item.EmployeeName</td>
+                                                    <td>@item.DesignationName</td>
+                                                    <td>@item.FirstCodeName</td>
+                                                    <td>@item.SecondCodeName</td>
+                                                    @*<td> <a href="#" style="padding-right:40px;"><i class="fa fa-edit" value="@item.DeptmentID" id="edit"></i> </a></td>*@
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section scripts{
+    <script>
+        $(function () {
+            $('#EmployeeDesignationList').DataTable({
+                'paging': true,
+                'lengthChange': false,
+                'searching': false,
+                'ordering': true,
+                'info': true,
+                'autoWidth': false
+            })
+        })
+        $(".select2").select2();
+        $(document).ready(function () {
+            $("#FirstCode").prop('disabled', true);
+            $("#DesignationID").prop('disabled', true);
+            $("#update").hide();
+            $("#delete").hide();
+
+            //$(document).on('click', '#edit', function () {
+            //    var id = $(this).attr("value");
+            //});
+
+            $(document).on('click', '#refresh', function () {
+                window.location.reload(true);
+            });
+            $(document).on('change', '#EmpID', function () {
+                var id = $("#EmpID").val();
+                $.ajax({
+                    url: '@Url.Action("GetEmployeeDesignationforSelect", "EmployeeDesignation")',
+                    contentType: "application/json;charset=utf-8",
+                    data: { id: id },
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (datas) {
+                        if (datas.Message == 0) {
+                            alert("This Designation  doesn't exist.");
+                        }
+                        else {
+                            $("#DesignationID").val(datas.DesignationID).change();
+                        }
+                    }
+                });
+            });
+           // $(".clickable-row").on('click', function (e) {
+            $(document).on('click', ".clickable-row", function () {
+                var id = $(this).attr("value");
+
+                 $.ajax({
+                    url: '@Url.Action("GetEmployeeDesignation", "EmployeeDesignation")',
+                    contentType: "application/json;charset=utf-8",
+                     data: JSON.stringify({ ID : id }),
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function (datas) {
+                        if (datas.Message==0)
+                        {
+                            alert("This Designation  doesn't exist.");
+                        }
+                        else {
+                            $("#save").hide();
+                            $("#update").show();
+                            $("#delete").show();
+                            $("#ID").val(datas.designation.ID);
+                            $("#EmpID").val(datas.designation.EmpID).change();
+                            $("#DesignationID").val(datas.designation.DesignationID).change();
+                            $("#FirstCode").val(datas.designation.FirstCode).change();
+                            $("#SecondCode").val(datas.designation.SecondCode).change();
+
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '#delete', function () {
+                $("#update").prop('disabled', true);
+                $("#delete").prop('disabled', true);
+                var id = $("#ID").val();
+                if (confirm('Are you sure you want to delete this from the database?')) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteEmployeeDesignationByid", "EmployeeDesignation")',
+                        contentType: "application/json;charset=utf-8",
+                        data: { id: id },
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (datas) {
+                            if (datas == 0) {
+                                alert("Delete failed.");
+                            }
+                            else {
+                                alert("Delete Successfull");
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+            });
+
+        });
+
+    </script>
+}
+

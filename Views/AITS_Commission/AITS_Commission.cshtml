@@ -1,0 +1,213 @@
+﻿
+@model BEEERP.Models.AITS_Models.AITS_Commission
+@{
+    ViewBag.Title = "AITS_Commission";
+}
+<form id="report" , target="_blank">
+    <div class="content">
+        @*<div id="loadingDiv">
+                <img id="bg-image" src="~/Image/tenor.gif" />
+            </div>*@
+        <div class="row">
+            <div class="form-horizontal">
+                <div class="box-body">
+                    <div class="col-md-12">
+                        <div class="box ">
+                            <div class="box-header with-border box-head-back" align="center">
+                                <h3 class="box-title">AITS Commission</h3>
+                            </div>
+
+                            <div class="box-body">
+                                <div class="col-md-12">
+
+                                    <div class="col-md-12">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.EmployeeID, new { @class = "col-md-4 control-label" })
+                                                <div class="col-sm-8">
+                                                    @Html.DropDownListFor(m => m.EmployeeID, (IEnumerable<SelectListItem>)ViewBag.Employee, new { @class = "form-control select2", })
+                                                    @Html.ValidationMessageFor(m => m.EmployeeID, "", new { @style = "color: red" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.From, new { @class = "col-md-4 control-label" })
+                                                <div class="col-sm-8 date input-group">
+                                                    @Html.TextBoxFor(m => m.From, new { @class = "enterTab form-control date ", @Value = DateTime.Now.ToString("dd-MM-yyyy") })
+                                                    <div class="input-group-addon">
+                                                        <i class="fa fa-calendar"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.To, new { @class = "col-md-4 control-label" })
+                                                <div class="col-sm-8 date input-group">
+                                                    @Html.TextBoxFor(m => m.To, new { @class = "enterTab form-control date ", @Value = DateTime.Now.ToString("dd-MM-yyyy") })
+                                                    <div class="input-group-addon">
+                                                        <i class="fa fa-calendar"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8" align="center">
+                                <input type="button" value="Generate" id="generate" class="btn btn-danger" style="padding-left:20px;" />
+                                <input type="button" name="clear" id="clear" value="Clear" class="btn skin-blue" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="box">
+                            <div class="box">
+                                <div class="box-header with-border box-head-back" align="center">
+                                    <h3 class="box-title">Item List</h3>
+                                </div>
+                                <div class="box-body">
+                                    <table class="table table-responsive" id="items">
+                                        <thead>
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Designation</th>
+                                                <th>Name</th>
+                                                <th>Sales Commission</th>
+                                                <th>Ordinal Commission</th>
+                                                <th>Inbound Commission</th>
+                                                <th>Outbound Commission</th>
+                                                <th>GB Commission</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<input type="hidden" id="hPacSize" />
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            //$("#BatchID").focus();
+            $(".select2").select2();
+            $('#To').datepicker({
+                autoclose: true,
+                format: 'dd-mm-yyyy',
+            });
+            $('#From').datepicker({
+                autoclose: true,
+                format: 'dd-mm-yyyy',
+            });
+        });
+        var table = $('#items').DataTable({
+            'paging': true,
+            'lengthChange': false,
+            'searching': false,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false
+        })
+        $(document).on('click', "#print", function (event) {
+            event.preventDefault();
+            if ($("#message").val() != "true") {
+                $("#report").attr("action", "/RawMaterialConsumtionBatch/GetRMCPreview")
+                $("#report").submit();
+            }
+        });
+        $(document).on('click', "#generate", function () {
+            var model = { EmployeeID: 0, To: "", From: "" }
+            model.EmployeeID = parseInt($("#EmployeeID").val());
+            model.To = $("#To").val();
+            model.From = $("#From").val();
+            ClearOnSearch();
+            $.ajax({
+                url: '@Url.Action("GenerateCommission", "AITS_Commission")',
+                contentType: "application/json;charset=utf-8",
+                data: JSON.stringify({ model }),
+                type: 'POST',
+                dataType: 'json',
+                success: function (datas) {
+                    if (datas.Message == 0) {
+                        alert("Your entered RMC OB No. Doesn't exist");
+                    }
+                    else if (datas.Message == 2) {
+                        alert("Fatal Error! Please Recheck you data");
+                    }
+                    else {
+                        $("#save").hide();
+                        $("#update").show();
+                        addedItems = [];
+                        $.each(datas.aITS, function (index, value) {
+                            var item = { Code: "", Designation: "", Name: "", SalesCommission: 0, OrdinalCommission: 0, InboundCommission: 0, OutboundCommission: 0, GBCommission : 0 };
+                            item.Code = value.Code;
+                            item.Name = value.Name;
+                            item.Designation = value.Designation;
+                            item.SalesCommission = value.SalesCommission;
+                            item.OrdinalCommission = value.OrdinalCommission;
+                            item.InboundCommission = value.InboundCommission;
+                            item.OutboundCommission = value.OutboundCommission;
+                            item.GBCommission = value.GBCommission;
+                            addedItems.push(item);
+                        });
+                        ShowOnTable();
+                        $("#print").show();
+                    }
+                },
+                error: function () {
+                    alert("Please check your internet connection first. If this doesn't solve your problem, then Contact With Paankouri Software & Services")
+
+                }
+            });
+        });
+        
+        $(document).on('click', '#clear', function () {
+            window.location.reload(true);
+        });
+        
+        function ShowOnTable() {
+            table.clear().draw();
+            var totalvalue = 0;
+            $.each(addedItems, function (index, value) {
+                table.row.add([value.Code, value.Name, value.Designation, value.SalesCommission, value.OrdinalCommission, value.InboundCommission, value.OutboundCommission, value.GBCommission,0, 
+                /*'<a href="#"><i class="fa fa-edit" name="editRow" value="' +
+                    value.itemId + '"></i></a> &ensp;&ensp;&ensp;<a href="#"><i class="fa fa-trash" name="deleteRow" value="' + value.itemId + '"></i></a>'*/]).draw();
+                //var val = (value.RmcRate * value.ItemQty).toFixed(2);
+                //totalvalue += parseFloat(val);
+            });
+            //$("#RMCTotalValue").val(totalvalue.toFixed(2));
+        }
+        function ClearOnSearch() {
+            $("#GroupID").val("").change();
+            $("#ItemID").val("").change();
+            $("#ItemQty").val("");
+            $("#UOM").val("");
+            itemId = "";
+            storeId = "";
+        }
+        function ClearOnAdd() {
+            $("#ItemID").val("").change();
+            $("#AvailableQTY").val("");
+            $("#ItemQty").val("");
+            $("#BalanceQty").val("");
+            $("#UOM").val("");
+            $("#Rate").val("");
+        }
+    
+    </script>
+}

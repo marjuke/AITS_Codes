@@ -1,0 +1,173 @@
+﻿@model BEEERP.Models.AITS_Models.AITS_Designations
+
+@{
+    ViewBag.Title = "Designation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm("SaveDesignation", "AITS_Designations", FormMethod.Post))
+{
+    <div class="content">
+        <div class="row">
+            <div class="form-horizontal">
+                <div class="box-body">
+                    <div>
+                        <h4 style="color:red">@ViewBag.messege</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="box ">
+                                <div class="box-header with-border box-head-back">
+                                    <h3 class="box-title">Create Designation</h3>
+                                </div>
+                                <div class="box-body">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.ID, new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.TextBoxFor(m => m.ID, new { @class = "form-control", @readonly = "readonly", @Value = ViewBag.ID })
+                                            @Html.ValidationMessageFor(m => m.ID)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.DesignationName, new { @class = "col-md-4 control-label" })
+                                        <div class="col-sm-8">
+                                            @Html.TextBoxFor(m => m.DesignationName, new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(m => m.DesignationName)
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-4"></div>
+                                        <div class="col-sm-8">
+                                            <input type="submit" name="Save" id="save" value="Save" class="btn skin-blue" />
+                                            <input type="submit" name="Upate" id="update" value="Update" class="btn skin-blue" />
+                                            <input type="submit" name="delete" id="delete" value="Delete" class="btn skin-blue" />
+                                            <input type="button" name="Refresh" id="refresh" value="Refresh" class="btn skin-blue" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="box ">
+                                <div class="box-header with-border box-head-back">
+                                    <h3 class="box-title">Designation List</h3>
+                                </div>
+                                <div class="box-body">
+                                    <table class="table table-responsive" id="DesignationList">
+                                        <thead>
+                                            <tr>
+                                                <th>Designation ID</th>
+                                                <th>Designation Name</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in ViewBag.Designation)
+                                            {
+                                                <tr value="@item.ID" class="clickable-row">
+                                                    <td>@item.ID</td>
+                                                    <td>@item.DesignationName</td>
+                                                    @*<td> <a href="#" style="padding-right:40px;"><i class="fa fa-edit" value="@item.DeptmentID" id="edit"></i> </a></td>*@
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section scripts{
+    <script>
+        $(function () {
+            $('#DepartmentList').DataTable({
+                'paging': true,
+                'lengthChange': false,
+                'searching': false,
+                'ordering': true,
+                'info': true,
+                'autoWidth': false
+            })
+        })
+
+        $(document).ready(function () {
+
+            $("#update").hide();
+            $("#delete").hide();
+
+            //$(document).on('click', '#edit', function () {
+            //    var id = $(this).attr("value");
+            //});
+
+            $(document).on('click', '#refresh', function () {
+                window.location.reload(true);
+            });
+           // $(".clickable-row").on('click', function (e) {
+            $(document).on('click', ".clickable-row", function () {
+                var id = $(this).attr("value");
+
+                 $.ajax({
+                    url: '@Url.Action("GetDesignation", "AITS_Designations")',
+                    contentType: "application/json;charset=utf-8",
+                     data: JSON.stringify({ ID : id }),
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function (datas) {
+                        if (datas.Message==0)
+                        {
+                            alert("This Designation  doesn't exist.");
+                        }
+                        else {
+                            $("#save").hide();
+                            $("#update").show();
+                            $("#delete").show();
+                            $("#ID").val(datas.designation.ID);
+                            $("#DesignationName").val(datas.designation.DesignationName);
+
+                        }
+                    }
+                });
+            });
+
+            $(document).on('click', '#delete', function () {
+                $("#update").prop('disabled', true);
+                $("#delete").prop('disabled', true);
+                var id = $("#ID").val();
+                if (confirm('Are you sure you want to delete this from the database?')) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteDesignationByid", "AITS_Designations")',
+                        contentType: "application/json;charset=utf-8",
+                        data: { id: id },
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (datas) {
+                            if (datas == 0) {
+                                alert("Delete failed.");
+                            }
+                            else {
+                                alert("Delete Successfull");
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+            });
+
+        });
+
+    </script>
+}
+
