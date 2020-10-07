@@ -1,0 +1,218 @@
+﻿
+@model BEEERP.Models.AITS_Models.AITS_Commission
+@{
+    ViewBag.Title = "AITS_Commission";
+}
+<form id="report" , target="_blank">
+    <div class="content">
+        @*<div id="loadingDiv">
+                <img id="bg-image" src="~/Image/tenor.gif" />
+            </div>*@
+        <div class="row">
+            <div class="form-horizontal">
+                <div class="box-body">
+                    <div class="col-md-12">
+                        <div class="box ">
+                            <div class="box-header with-border box-head-back" align="center">
+                                <h3 class="box-title">AITS Associates Information</h3>
+                            </div>
+
+                            <div class="box-body">
+                                <div class="col-md-12">
+                                    <div class="col-md-12">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.EmployeeID, new { @class = "col-md-4 control-label" })
+                                                <div class="col-sm-8">
+                                                    @Html.TextBoxFor(m => m.EmployeeID, new { @class = "form-control" })
+                                                    @Html.ValidationMessageFor(m => m.EmployeeID, "", new { @style = "color: red" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8" align="center">
+                                <input type="button" value="Search" id="generate" class="btn btn-danger" style="padding-left:20px;" />
+                                <input type="button" name="clear" id="clear" value="Clear" class="btn skin-blue" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="box-body">
+                            <div class="col-md-12">
+                                <div class="col-md-12">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Code, new { @class = "col-md-4 control-label" })
+                                            <div class="col-sm-8">
+                                                @Html.TextBoxFor(m => m.Code, new { @class = "form-control" })
+                                                @Html.ValidationMessageFor(m => m.Code, "", new { @style = "color: red" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Name, new { @class = "col-md-4 control-label" })
+                                            <div class="col-sm-8">
+                                                @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+                                                @Html.ValidationMessageFor(m => m.Name, "", new { @style = "color: red" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Designation, new { @class = "col-md-4 control-label" })
+                                            <div class="col-sm-8">
+                                                @Html.TextBoxFor(m => m.Designation, new { @class = "form-control" })
+                                                @Html.ValidationMessageFor(m => m.Designation, "", new { @style = "color: red" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box">
+                            <div class="box">
+                                <div class="box-header with-border box-head-back" align="center">
+                                    <h3 class="box-title">Associate List</h3>
+                                </div>
+                                <div class="box-body">
+                                    <table class="table table-responsive" id="items">
+                                        <thead>
+                                            <tr>
+                                                <th>SL</th>
+                                                <th>Name</th>
+                                                <th>Designation</th>
+                                                <th>First Code</th>
+                                                <th>Second Code</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            //$("#BatchID").focus();
+            $("#Name").prop('disabled', true);
+            $("#Code").prop('disabled', true);
+            $("#Designation").prop('disabled', true);
+            $(".select2").select2();
+            $('#To').datepicker({
+                autoclose: true,
+                format: 'dd-mm-yyyy',
+            });
+            $('#From').datepicker({
+                autoclose: true,
+                format: 'dd-mm-yyyy',
+            });
+        });
+        var table = $('#items').DataTable({
+            'paging': true,
+            'lengthChange': false,
+            'searching': false,
+            'ordering': true,
+            'info': true,
+            'autoWidth': false
+        })
+        $(document).on('click', "#print", function (event) {
+            event.preventDefault();
+            if ($("#message").val() != "true") {
+                $("#report").attr("action", "/RawMaterialConsumtionBatch/GetRMCPreview")
+                $("#report").submit();
+            }
+        });
+        $(document).on('click', "#generate", function () {
+            var EmployeeID = { EmployeeID: parseInt($("#EmployeeID").val()) };
+            ClearOnSearch();
+            $.ajax({
+                url: '@Url.Action("SearchAssociate", "AITS_AssociateSearch")',
+                contentType: "application/json;charset=utf-8",
+                data: EmployeeID,
+                type: 'GET',
+                dataType: 'json',
+                success: function (datas) {
+                    if (datas == 0) {
+                        alert("Employee Doesn't exist");
+                    }
+                    else if (datas.Message == 2) {
+                        alert("Fatal Error! Please Recheck you data");
+                    }
+                    else {
+                        $("#save").hide();
+                        $("#update").show();
+                        $("#code").val(datas.employee.ID);
+                        $("#Name").val(datas.employee.EmployeeName);
+                        $("#Designation").val(datas.employee.Designation);
+
+                        addedItems = [];
+                        var count=0
+                        $.each(datas.associateList, function (index, value) {
+                            var item = { SL: 0, Name: "", Designation: "", FirstCode: "", SecondCode: "", Total: 0 };
+                            item.SL = count;
+                            item.Name = value.EmployeeName;
+                            item.Designation = value.Designation;
+                            item.FirstCode = value.FirstCode;
+                            item.SecondCode = value.SecondCode;
+                            addedItems.push(item);
+                            count++;
+                        });
+                        ShowOnTable();
+                        $("#print").show();
+                    }
+                },
+                error: function () {
+                    alert("Please check your internet connection first")
+
+                }
+            });
+        });
+
+        $(document).on('click', '#clear', function () {
+            window.location.reload(true);
+        });
+
+        function ShowOnTable() {
+            table.clear().draw();
+            var totalvalue = 0;
+            $.each(addedItems, function (index, value) {
+                table.row.add([value.SL, value.Name, value.Designation, value.FirstCode, value.SecondCode,
+                /*'<a href="#"><i class="fa fa-edit" name="editRow" value="' +
+                    value.itemId + '"></i></a> &ensp;&ensp;&ensp;<a href="#"><i class="fa fa-trash" name="deleteRow" value="' + value.itemId + '"></i></a>'*/]).draw();
+                //var val = (value.RmcRate * value.ItemQty).toFixed(2);
+                //totalvalue += parseFloat(value.Total);
+            });
+            //$("#TolalAmount").val(totalvalue.toFixed(2));
+        }
+        function ClearOnSearch() {
+            $("#GroupID").val("").change();
+            $("#ItemID").val("").change();
+            $("#ItemQty").val("");
+            $("#UOM").val("");
+            itemId = "";
+            storeId = "";
+        }
+        function ClearOnAdd() {
+            $("#ItemID").val("").change();
+            $("#AvailableQTY").val("");
+            $("#ItemQty").val("");
+            $("#BalanceQty").val("");
+            $("#UOM").val("");
+            $("#Rate").val("");
+        }
+
+    </script>
+}
